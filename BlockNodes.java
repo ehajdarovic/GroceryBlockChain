@@ -26,15 +26,15 @@ public class BlockNodes {
     public Integer blockNum = 0;
     public String currHash;
     public String prevHash;
-    private String data;
+    public String data;
     private long timeStamp;
-    private int nonce;
+    private int nonce = 0;
+    public long startTime;
 
-    public BlockNodes(String data, Integer blockNum, int nonce, long timeStamp){//removed String prevHash
+    public BlockNodes(String data, Integer blockNum, long timeStamp){//removed String prevHash
         this.data = data;
         //this.prevHash = prevHash;
         this.blockNum = blockNum;
-        this.nonce = nonce;
         this.timeStamp = timeStamp;
         this.currHash = calculateHash();
     }
@@ -56,14 +56,30 @@ public class BlockNodes {
         prevHash = "0";
     }
 
+    public void mineBlock(int difficulty) {
+        String target = new String(new char[difficulty]).replace('\0', '0'); //Create a string with difficulty * "0"
+        while(!currHash.substring( 0, difficulty).equals(target)) {
+            nonce++;
+            currHash = calculateHash();
+        }
+        System.out.println("Mine Successful. Hash is: " + currHash);
+    }
+
+        public double elapsedTime() {
+            long now = System.currentTimeMillis();
+            return (now - startTime) / 1000.0;
+        }
+
+    //MAIN
     public static void main(String[] args){
         LinkedList<BlockNodes> blockChain = new LinkedList<BlockNodes>();
-        int i = 0;
+        int i = 0, diff;
 
         Calendar c1 = Calendar.getInstance();
         Date d1 = c1.getTime();
 
         Scanner input = new Scanner(System.in);
+        Scanner input2 = new Scanner(System.in);
         String ans, data;
         BlockNodes block = null;
 
@@ -87,7 +103,7 @@ public class BlockNodes {
             System.out.print("Enter data: ");
             data = input.nextLine();
 
-            block = new BlockNodes(data, i, 16,d1.getTime());
+            block = new BlockNodes(data, i,d1.getTime());
 
             if (blockChain.size() == 0)
                 block.setFirstHash();
@@ -98,14 +114,27 @@ public class BlockNodes {
             }
 
             blockChain.add(block);
+
+            System.out.print("Enter desired difficulty: ");
+            diff = input2.nextInt();
+
+
+            // mining block
+            block.startTime = System.currentTimeMillis();
+            System.out.println("Mining block " + i + ": ");
+            block.mineBlock(diff);
+            System.out.println("Time taken: " + block.elapsedTime());
+
             i++;
 
         } while(ans.equals("y"));
 
         for(BlockNodes b : blockChain) {
+            System.out.println("Block Number: " + b.blockNum);
             System.out.println("Current Hash: " + b.currHash);
             System.out.println("Previous Hash: " + b.prevHash);
-            System.out.println("Block Number: " + b.blockNum);
+            System.out.println("Nonce: " + b.nonce);
+            System.out.println("Timestamp: " + b.timeStamp);
             System.out.println("Data: " + b.data);
         }
     }
